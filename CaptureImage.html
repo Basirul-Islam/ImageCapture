@@ -91,6 +91,15 @@
 	<body>
 		<!-- The Modal -->
 		<div class="modal">
+			<div
+				id="queryErrorModal"
+				class="web-camera-container"
+				style="display: none"
+			>
+				<div style="margin-top: 1em; margin-bottom: 1em">
+					<label>Please provide necessary query parameters value.</label>
+				</div>
+			</div>
 			<!-- Modal content -->
 			<div id="cameraModal" class="web-camera-container">
 				<div id="cameraContainer" style="display: block">
@@ -211,23 +220,16 @@
 			// Get the username and password from the URL parameters
 			const username = urlParams.get("username");
 			const password = urlParams.get("password");
-
-			// Use the username and password as needed
-			console.log("Username:", username);
-			console.log("Password:", password);
-
-			// Get the customerCardNumber from the URL parameters, or assign a default value
-			let customerCardNumber = urlParams.get("customerCardNumber");
-			if (!customerCardNumber) {
-				customerCardNumber = "14713353481";
-			}
+			const customerCardNumber = urlParams.get("customerCardNumber");
+			const backendApiUrl = urlParams.get("ApiUrl");
 
 			// Set the value of the input box
 			document.getElementById("customerCardNumberInput").value =
 				customerCardNumber;
 
 			// Get the modal
-			var modal = document.getElementById("cameraModal");
+			var cameraModal = document.getElementById("cameraModal");
+			var queryParamErrorModal = document.getElementById("queryErrorModal");
 			var camContainer = document.getElementById("cameraContainer");
 			var responseContainer = document.getElementById("responseContainer");
 			var successDialog = document.getElementById("successDialog");
@@ -286,10 +288,21 @@
 			}
 			// When the page loads, open the modal and start the camera
 			window.onload = function () {
-				modal.style.display = "block";
-				startCamera();
+				// modal.style.display = "block";
+				// startCamera();
+				validateQueryParams();
 			};
-
+			function validateQueryParams() {
+				if (username && password && customerCardNumber && backendApiUrl) {
+					console.log("i'm here");
+					cameraModal.style.display = "block";
+					queryParamErrorModal.style.display = "none";
+					startCamera();
+				} else {
+					cameraModal.style.display = "none";
+					queryParamErrorModal.style.display = "block";
+				}
+			}
 			// Function to stop the camera
 			function stopCamera() {
 				captureBtn.style.display = "none";
@@ -374,4 +387,5 @@
 		</script>
 	</body>
 </html>
-<!-- file:///P:/Plorea%20Horeca/Projects/CaptureImage/index.html?username=myusername&password=mypassword&customerCardNumber=2156564658151561651 -->
+<!-- file:///P:/Plorea%20Horeca/Projects/CaptureImage/CaptureImage.html?username=myusername&password=mypassword&customerCardNumber=2156564658151561651 -->
+<!-- file:///P:/Plorea%20Horeca/Projects/CaptureImage/CaptureImage.html?username=myusername&password=mypassword&customerCardNumber=2156564658151561651&ApiUrl=https://localhost:44339/Image/TestEndpoint -->
