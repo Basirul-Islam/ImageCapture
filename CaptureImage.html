@@ -1,0 +1,376 @@
+<!DOCTYPE html>
+<!DOCTYPE html>
+<html lang="en">
+	<head>
+		<meta charset="UTF-8" />
+		<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+		<title>Capture Image</title>
+		<style>
+			.body {
+				display: flex;
+				justify-content: center;
+			}
+
+			.modal {
+				display: flex;
+				justify-content: center;
+			}
+
+			.bottom_line {
+				border-bottom: 1px solid gray;
+				padding: 10px 5px;
+				width: 100%;
+			}
+			._row {
+				display: flex;
+				flex-direction: row;
+			}
+			._column {
+				display: flex;
+				flex-direction: column;
+			}
+			._margin-bottom-1em {
+				margin-bottom: 1em !important;
+			}
+			._margin-top-1em {
+				margin-top: 1em !important;
+			}
+			._padding-left-1em {
+				padding-left: 1em !important;
+			}
+			.camera-container {
+				margin-top: 1em;
+				display: flex;
+				flex-direction: column;
+				align-items: center;
+				justify-content: center;
+				position: relative; /* Optional, adjust based on your layout */
+			}
+
+			.action-button {
+				min-width: 5em;
+				font-size: 1em;
+				font-weight: 300;
+				line-height: normal;
+				border-radius: 5px;
+				padding: 0.3em 1em;
+			}
+
+			.web-camera-container {
+				margin-top: 2rem;
+				flex-basis: 25%;
+				min-width: 485px;
+				flex-shrink: 1;
+				background-color: #d0d0d0;
+				padding: 0 20px;
+				border: 0.1px solid #797979;
+				border-radius: 4px;
+				-webkit-box-shadow: 0 1px 9px 0 rgba(0, 0, 0, 0.5),
+					0 3px 26px 0 rgba(0, 0, 0, 0.5);
+				box-shadow: 0 1px 9px 0 rgba(0, 0, 0, 0.5),
+					0 3px 26px 0 rgba(0, 0, 0, 0.5);
+			}
+
+			.camera-shoot {
+				margin: 1rem 0;
+				button {
+					height: 60px;
+					width: 60px;
+					display: flex;
+					align-items: center;
+					justify-content: center;
+					border-radius: 100%;
+					img {
+						height: 35px;
+						object-fit: cover;
+					}
+				}
+			}
+		</style>
+	</head>
+	<body>
+		<!-- The Modal -->
+		<div class="modal">
+			<!-- Modal content -->
+			<div id="myModal" class="web-camera-container">
+				<div id="cameraContainer" style="display: block">
+					<div class="_margin-top-1em" style="z-index: 1">
+						<div
+							style="
+								display: flex;
+								flex-direction: row;
+								justify-content: center;
+							"
+						>
+							<label class="control-label"
+								><b
+									>Customer card number <span class="_color-red">*</span></b
+								></label
+							><input
+								class="form-control"
+								style="padding: 5px; font-size: 14px; margin-left: 1em"
+								id="customerCardNumberInput"
+								disabled
+							/>
+						</div>
+						<div
+							id="loading"
+							style="
+								display: none;
+								flex-direction: row;
+								justify-content: center;
+								margin-top: 1em;
+							"
+						>
+							<label>Loading....</label>
+						</div>
+						<div class="camera-container">
+							<video
+								id="camera"
+								autoplay
+								style="border-radius: 4px; height: 337.5px; display: none"
+							></video>
+							<canvas
+								id="canvas"
+								style="display: none"
+								width="450"
+								height="330"
+							></canvas>
+						</div>
+						<div id="buttons" style="margin-left: 1em; margin-right: 1em">
+							<div
+								class="_row _margin-top-1em _margin-bottom-1em margin-left:1em; margin-right:1em;"
+								style="justify-content: space-between"
+							>
+								<button
+									id="closeCameraButton"
+									class="action-button"
+									v-on:click="openOrCloseCamera"
+								>
+									close camera
+								</button>
+								<button
+									id="captureButton"
+									class="action-button"
+									style="display: block"
+								>
+									Capture
+								</button>
+								<button
+									id="saveButton"
+									class="action-button"
+									style="display: none"
+								>
+									Save
+								</button>
+							</div>
+							<div
+								id="openCamButton"
+								class="_margin-top-1em _margin-bottom-1em"
+								style="display: flex; justify-content: center"
+							>
+								<button class="action-button">Open camera</button>
+							</div>
+						</div>
+					</div>
+				</div>
+				<div id="responseContainer" style="display: none">
+					<div class="_margin-top-1em _margin-bottom-1em">
+						<div
+							id="successDialog"
+							style="display: none; justify-content: center"
+							class="_row"
+						>
+							<i class="far fa-check-circle _font3em _color-green"></i>
+							<p class="_padding-left-1em">
+								Captured photo has been saved successfully.
+							</p>
+						</div>
+						<div
+							id="errorDialog"
+							style="display: none; justify-content: center"
+							class="_row"
+						>
+							<i class="fas fa-times-circle _font3em _color-red"></i>
+							<p class="_padding-left-1em">
+								Due to technical issue, process could not complete. Please try
+								later.
+							</p>
+						</div>
+					</div>
+				</div>
+			</div>
+		</div>
+
+		<script>
+			// Get the URL parameters
+			const queryString = window.location.search;
+			const urlParams = new URLSearchParams(queryString);
+
+			// Get the username and password from the URL parameters
+			const username = urlParams.get("username");
+			const password = urlParams.get("password");
+
+			// Use the username and password as needed
+			console.log("Username:", username);
+			console.log("Password:", password);
+
+			// Get the customerCardNumber from the URL parameters, or assign a default value
+			let customerCardNumber = urlParams.get("customerCardNumber");
+			if (!customerCardNumber) {
+				customerCardNumber = "14713353481";
+			}
+
+			// Set the value of the input box
+			document.getElementById("customerCardNumberInput").value =
+				customerCardNumber;
+
+			// Get the modal
+			var modal = document.getElementById("myModal");
+			var camContainer = document.getElementById("cameraContainer");
+			var responseContainer = document.getElementById("responseContainer");
+			var successDialog = document.getElementById("successDialog");
+			var errorDialog = document.getElementById("errorDialog");
+			var loading = document.getElementById("loading");
+			//Buttons
+			var captureBtn = document.getElementById("captureButton");
+			var openCamBtn = document.getElementById("openCamButton");
+			var closeCamBtn = document.getElementById("closeCameraButton");
+			var saveBtn = document.getElementById("saveButton");
+			//Video div
+			var cam = document.getElementById("camera");
+			var canvas = document.getElementById("canvas");
+
+			//Event Listeners for the btns
+			captureBtn.addEventListener("click", captureImage);
+			closeCamBtn.addEventListener("click", stopCamera);
+			openCamBtn.addEventListener("click", startCamera);
+			saveBtn.addEventListener("click", onSave);
+			// Function to start the camera
+			function startCamera() {
+				console.log("Opening the camera");
+				canvas.style.display = "none";
+				showLoadingText();
+				const constraints = {
+					audio: false,
+					video: true,
+				};
+
+				navigator.mediaDevices
+					.getUserMedia(constraints)
+					.then(function (stream) {
+						var video = document.getElementById("camera");
+						video.srcObject = stream;
+						video.onloadedmetadata = function (e) {
+							video.play();
+						};
+						captureBtn.style.display = "flex";
+						closeCamBtn.style.display = "flex";
+						cam.style.display = "block";
+						hideLoadingText();
+					})
+					.catch(function (err) {
+						console.log("Error: " + err);
+						alert(
+							"The browser may not support camera access or there is an error."
+						);
+					});
+			}
+			function showLoadingText() {
+				openCamBtn.style.display = "none"; //hide open cam btn
+				loading.style.display = "flex"; // Show the div
+			}
+			function hideLoadingText() {
+				loading.style.display = "none"; // Hide the div
+			}
+			// When the page loads, open the modal and start the camera
+			window.onload = function () {
+				modal.style.display = "block";
+				startCamera();
+			};
+
+			// Function to stop the camera
+			function stopCamera() {
+				captureBtn.style.display = "none";
+				cam.style.display = "none";
+				closeCamBtn.style.display = "none";
+				openCamBtn.style.display = "flex";
+				var video = document.getElementById("camera");
+				if (video.srcObject) {
+					var stream = video.srcObject;
+					var tracks = stream.getTracks();
+
+					tracks.forEach(function (track) {
+						track.stop();
+					});
+					video.srcObject = null;
+				}
+			}
+			function captureImage() {
+				// Here you can capture the image from the video element and process it
+
+				const FLASH_TIMEOUT = 50;
+
+				setTimeout(() => {
+					const context = canvas.getContext("2d");
+
+					// Draw the video frame onto the canvas
+					context.drawImage(cam, 0, 0, 450, 337.5);
+
+					// Hide the video element and display the canvas
+					cam.style.display = "none";
+					canvas.style.display = "block";
+					saveBtn.style.display = "block";
+					captureBtn.style.display = "none";
+					console.log("Image captured!");
+				}, FLASH_TIMEOUT);
+			}
+			function onSave() {
+				const imageData = canvas.toDataURL("image/jpeg");
+				console.log("imageData: ", imageData);
+				let img = {
+					CustomerCardNumber: customerCardNumber,
+					Image: imageData.replace(/^data:image\/\w+;base64,/, ""),
+					Description: "profile picture",
+					FileName: `${customerCardNumber}.jpg`,
+					FileType: "jpg",
+				};
+				saveImageRequest(img);
+			}
+			function saveImageRequest(image) {
+				console.log("img data: ", image);
+
+				var xhr = new XMLHttpRequest();
+				var url = "https://localhost:44339/Image/TestEndpoint";
+				var data = JSON.stringify({ image: image });
+
+				xhr.open("POST", url, true);
+				xhr.setRequestHeader("Content-Type", "application/json");
+
+				xhr.onreadystatechange = function () {
+					if (this.readyState === XMLHttpRequest.DONE) {
+						responseContainer.style.display = "block";
+						camContainer.style.display = "none";
+						if (xhr.responseText === "3200") {
+							console.log("response:", xhr.responseText);
+							stopCamera();
+							successDialog.style.display = "block";
+							errorDialog.style.display = "none";
+						} else {
+							errorDialog.style.display = "block";
+							successDialog.style.display = "none";
+						}
+					}
+				};
+
+				xhr.onerror = function () {
+					console.log("xhr:", xhr);
+					console.error("Request failed to reach the server.");
+				};
+
+				xhr.send(data);
+			}
+		</script>
+	</body>
+</html>
+<!-- file:///P:/Plorea%20Horeca/Projects/CaptureImage/index.html?username=myusername&password=mypassword&customerCardNumber=2156564658151561651 -->
