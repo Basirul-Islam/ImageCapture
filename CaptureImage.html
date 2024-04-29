@@ -91,8 +91,17 @@
 	<body>
 		<!-- The Modal -->
 		<div class="modal">
+			<div
+				id="queryErrorModal"
+				class="web-camera-container"
+				style="display: none"
+			>
+				<div style="margin-top: 1em; margin-bottom: 1em">
+					<label>Please provide necessary query parameters value.</label>
+				</div>
+			</div>
 			<!-- Modal content -->
-			<div id="myModal" class="web-camera-container">
+			<div id="cameraModal" class="web-camera-container">
 				<div id="cameraContainer" style="display: block">
 					<div class="_margin-top-1em" style="z-index: 1">
 						<div
@@ -198,6 +207,16 @@
 								later.
 							</p>
 						</div>
+						<div
+							id="unauthorizedErrorDialog"
+							style="display: none; justify-content: center"
+							class="_row"
+						>
+							<i class="fas fa-times-circle _font3em _color-red"></i>
+							<p class="_padding-left-1em">
+								User is unauthorized for this action.
+							</p>
+						</div>
 					</div>
 				</div>
 			</div>
@@ -211,27 +230,23 @@
 			// Get the username and password from the URL parameters
 			const username = urlParams.get("username");
 			const password = urlParams.get("password");
-
-			// Use the username and password as needed
-			console.log("Username:", username);
-			console.log("Password:", password);
-
-			// Get the customerCardNumber from the URL parameters, or assign a default value
-			let customerCardNumber = urlParams.get("customerCardNumber");
-			if (!customerCardNumber) {
-				customerCardNumber = "14713353481";
-			}
+			const customerCardNumber = urlParams.get("customerCardNumber");
+			const backendApiUrl = urlParams.get("ApiUrl");
 
 			// Set the value of the input box
 			document.getElementById("customerCardNumberInput").value =
 				customerCardNumber;
 
 			// Get the modal
-			var modal = document.getElementById("myModal");
+			var cameraModal = document.getElementById("cameraModal");
+			var queryParamErrorModal = document.getElementById("queryErrorModal");
 			var camContainer = document.getElementById("cameraContainer");
 			var responseContainer = document.getElementById("responseContainer");
 			var successDialog = document.getElementById("successDialog");
 			var errorDialog = document.getElementById("errorDialog");
+			var unauthErrorDialog = document.getElementById(
+				"unauthorizedErrorDialog"
+			);
 			var loading = document.getElementById("loading");
 			//Buttons
 			var captureBtn = document.getElementById("captureButton");
@@ -286,10 +301,18 @@
 			}
 			// When the page loads, open the modal and start the camera
 			window.onload = function () {
-				modal.style.display = "block";
-				startCamera();
+				validateQueryParams();
 			};
-
+			function validateQueryParams() {
+				if (username && password && customerCardNumber && backendApiUrl) {
+					cameraModal.style.display = "block";
+					queryParamErrorModal.style.display = "none";
+					startCamera();
+				} else {
+					cameraModal.style.display = "none";
+					queryParamErrorModal.style.display = "block";
+				}
+			}
 			// Function to stop the camera
 			function stopCamera() {
 				captureBtn.style.display = "none";
@@ -336,14 +359,19 @@
 					FileName: `${customerCardNumber}.jpg`,
 					FileType: "jpg",
 				};
-				saveImageRequest(img);
+				let data = {
+					Username: username,
+					Password: password,
+					SaveImageModel: img,
+				};
+				saveImageRequest(data);
 			}
-			function saveImageRequest(image) {
-				console.log("img data: ", image);
+			function saveImageRequest(data) {
+				console.log("model data: ", data);
 
 				var xhr = new XMLHttpRequest();
 				var url = "https://localhost:44339/Image/TestEndpoint";
-				var data = JSON.stringify({ image: image });
+				var data = JSON.stringify({ data: data });
 
 				xhr.open("POST", url, true);
 				xhr.setRequestHeader("Content-Type", "application/json");
@@ -352,14 +380,22 @@
 					if (this.readyState === XMLHttpRequest.DONE) {
 						responseContainer.style.display = "block";
 						camContainer.style.display = "none";
+						stopCamera();
 						if (xhr.responseText === "3200") {
 							console.log("response:", xhr.responseText);
-							stopCamera();
 							successDialog.style.display = "block";
+							unauthErrorDialog.style.display = "none";
 							errorDialog.style.display = "none";
 						} else {
-							errorDialog.style.display = "block";
-							successDialog.style.display = "none";
+							if (xhr.responseText === "3213") {
+								unauthErrorDialog.style.display = "block";
+								errorDialog.style.display = "none";
+								successDialog.style.display = "none";
+							} else {
+								errorDialog.style.display = "block";
+								unauthErrorDialog.style.display = "none";
+								successDialog.style.display = "none";
+							}
 						}
 					}
 				};
@@ -374,4 +410,3 @@
 		</script>
 	</body>
 </html>
-<!-- file:///P:/Plorea%20Horeca/Projects/CaptureImage/index.html?username=myusername&password=mypassword&customerCardNumber=2156564658151561651 -->
