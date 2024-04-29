@@ -262,9 +262,8 @@
 			closeCamBtn.addEventListener("click", stopCamera);
 			openCamBtn.addEventListener("click", startCamera);
 			saveBtn.addEventListener("click", onSave);
-			// Function to start the camera
+
 			function startCamera() {
-				console.log("Opening the camera");
 				canvas.style.display = "none";
 				showLoadingText();
 				const constraints = {
@@ -286,7 +285,6 @@
 						hideLoadingText();
 					})
 					.catch(function (err) {
-						console.log("Error: " + err);
 						alert(
 							"The browser may not support camera access or there is an error."
 						);
@@ -331,14 +329,12 @@
 				}
 			}
 			function captureImage() {
-				// Here you can capture the image from the video element and process it
-
 				const FLASH_TIMEOUT = 50;
 
 				setTimeout(() => {
 					const context = canvas.getContext("2d");
 
-					// Draw the video frame onto the canvas
+					// Drawing the video frame onto the canvas
 					context.drawImage(cam, 0, 0, 450, 337.5);
 
 					// Hide the video element and display the canvas
@@ -346,12 +342,10 @@
 					canvas.style.display = "block";
 					saveBtn.style.display = "block";
 					captureBtn.style.display = "none";
-					console.log("Image captured!");
 				}, FLASH_TIMEOUT);
 			}
 			function onSave() {
 				const imageData = canvas.toDataURL("image/jpeg");
-				console.log("imageData: ", imageData);
 				let img = {
 					CustomerCardNumber: customerCardNumber,
 					Image: imageData.replace(/^data:image\/\w+;base64,/, ""),
@@ -367,8 +361,6 @@
 				saveImageRequest(data);
 			}
 			function saveImageRequest(data) {
-				console.log("model data: ", data);
-
 				var xhr = new XMLHttpRequest();
 				var url = "https://localhost:44339/Image/TestEndpoint";
 				var data = JSON.stringify({ data: data });
@@ -382,7 +374,6 @@
 						camContainer.style.display = "none";
 						stopCamera();
 						if (xhr.responseText === "3200") {
-							console.log("response:", xhr.responseText);
 							successDialog.style.display = "block";
 							unauthErrorDialog.style.display = "none";
 							errorDialog.style.display = "none";
@@ -401,7 +392,6 @@
 				};
 
 				xhr.onerror = function () {
-					console.log("xhr:", xhr);
 					console.error("Request failed to reach the server.");
 				};
 
